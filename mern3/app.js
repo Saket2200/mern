@@ -12,16 +12,20 @@ const { authenticateToken } = require('./middlewares/authMiddleware');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware to parse JSON bodies
 app.use(bodyParser.json());
+
+// Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Routes
 app.use('/auth', authRoutes);
 app.use('/messages', authenticateToken, messageRoutes);
 app.use('/matches', authenticateToken, matchRoutes);
 
 // Redirect to sign-in page for root URL
 app.get('/', (req, res) => {
-    res.redirect('/signin.html');
+    res.sendFile(path.join(__dirname, 'public', 'signin.html'));
 });
 
 // Handle successful sign-in
@@ -50,6 +54,18 @@ function generateToken(user) {
     return token;
 }
 
+// Middleware to handle requests from loveg.com
+app.use((req, res, next) => {
+    const hostname = req.hostname;
+    if (hostname === 'loveg.com') {
+        // Redirect to your app's URL
+        res.redirect('https://loveg.com');
+    } else {
+        next();
+    }
+});
+
+// Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
